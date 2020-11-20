@@ -65,7 +65,10 @@ RUN pecl install \
 RUN docker-php-ext-enable \
     mcrypt
 
+RUN pecl install xdebug    
+
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 COPY --from=0 /builder /builder
 COPY defaultBuildCmd /usr/local/bin/build
+COPY php.ini /usr/local/etc/php

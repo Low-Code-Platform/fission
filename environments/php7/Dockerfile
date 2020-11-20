@@ -67,7 +67,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 COPY . /app
 WORKDIR /app
 
-RUN composer install
+RUN composer update
 
 EXPOSE 8888
 

@@ -8,6 +8,9 @@ use PhpParser\ParserFactory;
 use Psr\Http\Message\ServerRequestInterface;
 use React\Http\Server;
 use RingCentral\Psr7\Response;
+use Sikei\React\Http\Middleware\CorsMiddleware;
+use \MimeType\MimeType;
+
 
 const V1_CODEPATH = '/userfunc/user';
 const V1_USER_FUNCTION = 'handler';
@@ -21,7 +24,17 @@ $logger->pushHandler(new StreamHandler('php://stdout', Logger::DEBUG));
 
 $loop = React\EventLoop\Factory::create();
 
-$server = new Server(function (ServerRequestInterface $request) use (&$codePath, &$userFunction, $logger) {
+$settings = [
+    'allow_credentials' => true,
+    'allow_origin'      => ['*'],
+    'allow_methods'     => ['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS'],
+    'allow_headers'     => ['DNT','X-Custom-Header','Keep-Alive','User-Agent','X-Requested-With','If-Modified-Since','Cache-Control','Content-Type','Content-Range','Range', 'Origin', 'X-Auth-Token', 'Authorization', 'Pragma', 'Accept', 'Accept-Encoding'],
+    'expose_headers'    => ['DNT','X-Custom-Header','Keep-Alive','User-Agent','X-Requested-With','If-Modified-Since','Cache-Control','Content-Type','Content-Range','Range'],
+    'max_age'           => 60 * 60 * 24 * 20, // preflight request is valid for 20 days,
+    'response_code' => 200,
+];
+
+$server = new Server([new CorsMiddleware($settings), function (ServerRequestInterface $request) use (&$codePath, &$userFunction, $logger) {
     $path = $request->getUri()->getPath();
     $method = $request->getMethod();
 
@@ -45,6 +58,22 @@ $server = new Server(function (ServerRequestInterface $request) use (&$codePath,
 
         return new Response(201);
     }
+   
+    $len = strlen('/test/'); 
+    if(substr($path, 0, $len) === '/test/' && 'GET' === $method) { 
+        try {   
+            $myfile = "/userfunc/deployarchive" . $path;
+            if (is_readable($myfile)) {
+                return new Response(200, ['Content-Type' => MimeType::getType($myfile)], file_get_contents($myfile)); 
+            } else {
+                return new Response(200, ['Content-Type' => 'text/plain'], "Forbidden\n");       
+            }
+        }   
+        catch(Exception $e) {
+            echo 'Message: ' .$e->getMessage();
+        }
+    }
+
     if ('/' === $path) {
         if (null === $codePath) {
             $logger->error("$codePath not found");
@@ -83,7 +112,7 @@ $server = new Server(function (ServerRequestInterface $request) use (&$codePath,
     }
 
     return new Response(404, ['Content-Type' => 'text/plain'], 'Not found');
-});
+}]);
 
 $socket = new React\Socket\Server('0.0.0.0:8888', $loop);
 $server->listen($socket);

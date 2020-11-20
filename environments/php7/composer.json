@@ -1,12 +1,14 @@
 {
-    "autoload": {
-        "psr-4": {
-            "PHPEnv\\": "src/"
-        }
-    },
-    "require": {
-        "monolog/monolog": "^1.22",
-        "react/http": "^0.8.4",
-        "nikic/php-parser": "^4.2"
+  "autoload": {
+    "psr-4": {
+      "PHPEnv\\": "src/"
     }
+  },
+  "require": {
+    "monolog/monolog": "^1.22",
+    "react/http": "^0.8.4",
+    "nikic/php-parser": "^4.2",
+    "christoph-kluge/reactphp-http-cors-middleware": "^1.0",
+    "katzien/php-mime-type": "^2.1"
+  }
 }

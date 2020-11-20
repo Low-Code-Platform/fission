@@ -1,7 +1,9 @@
 package io.fission;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -10,7 +12,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
+import java.util.Properties;
 import org.springframework.boot.*;
 import org.springframework.boot.autoconfigure.*;
 import org.springframework.http.RequestEntity;
@@ -21,6 +23,7 @@ import io.fission.Function;
 
 @RestController
 @EnableAutoConfiguration
+@CrossOrigin
 public class Server {
 
 	private Function fn;
@@ -39,10 +42,52 @@ public class Server {
 		}
 	}
 
+	/**
+	 * Copies a directory from a jar file to an external directory.
+	 */
+	public static void copyResourcesToDirectory(JarFile fromJar, String jarDir, String destDir) throws IOException {
+		for (Enumeration<JarEntry> entries = fromJar.entries(); entries.hasMoreElements();) {
+			JarEntry entry = entries.nextElement();
+			if (entry.getName().startsWith(jarDir + "/") && !entry.isDirectory()) {
+				File dest = new File(destDir + "/" + entry.getName().substring(jarDir.length() + 1));
+				File parent = dest.getParentFile();
+				if (parent != null) {
+					parent.mkdirs();
+				}
+
+				FileOutputStream out = new FileOutputStream(dest);
+				InputStream in = fromJar.getInputStream(entry);
+
+				try {
+					byte[] buffer = new byte[8 * 1024];
+
+					int s = 0;
+					while ((s = in.read(buffer)) > 0) {
+						out.write(buffer, 0, s);
+					}
+				} catch (IOException e) {
+					throw new IOException("Could not copy asset from jar file", e);
+				} finally {
+					try {
+						in.close();
+					} catch (IOException ignored) {
+					}
+					try {
+						out.close();
+					} catch (IOException ignored) {
+					}
+				}
+			}
+		}
+
+	}
+
 	@PostMapping(path = "/v2/specialize", consumes = "application/json")
 	ResponseEntity<String> specialize(@RequestBody FunctionLoadRequest req) {
 		long startTime = System.nanoTime();
 		File file = new File(req.getFilepath());
+		System.out.println("File path : " + req.getFilepath());
+		System.out.println("File URL : " + req.getUrl());
 		if (!file.exists()) {
 			return ResponseEntity.badRequest().body("/userfunc/user not found");
 		}
@@ -60,7 +105,8 @@ public class Server {
 			jarFile = new JarFile(file);
 			Enumeration<JarEntry> e = jarFile.entries();
 			URL[] urls = { new URL("jar:file:" + file + "!/") };
-
+			String exdir = req.getFilepath().substring(0, req.getFilepath().lastIndexOf("/") + 1);
+			copyResourcesToDirectory(jarFile, "resources", exdir);
 			// TODO Check if the classloading can be improved for ex. use something like:
 			// Thread.currentThread().setContextClassLoader(cl);
 			if (this.getClass().getClassLoader() == null) {
@@ -76,6 +122,7 @@ public class Server {
 			// Load all dependent classes from libraries etc.
 			while (e.hasMoreElements()) {
 				JarEntry je = e.nextElement();
+				System.out.println("JarEntry URL : " + je.isDirectory() + " : " + je.getName());
 				if (je.isDirectory() || !je.getName().endsWith(".class")) {
 					continue;
 				}
@@ -117,7 +164,13 @@ public class Server {
 	}
 
 	public static void main(String[] args) throws Exception {
-		SpringApplication.run(Server.class, args);
+		SpringApplication app = new SpringApplication(Server.class);
+
+		Properties properties = new Properties();
+		properties.setProperty("spring.resources.static-locations",
+				"classpath:/static/, classpath:/public/, classpath:/resources/, /userfunc/static/, /userfunc/static, classpath:/userfunc/static/, file:/userfunc/static/");
+		app.setDefaultProperties(properties);
+		app.run(args);
 	}
 
 }

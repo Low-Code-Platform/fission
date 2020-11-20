@@ -187,6 +187,8 @@ func main() {
 	http.HandleFunc("/healthz", readinessProbeHandler)
 	http.HandleFunc("/specialize", specializeHandler())
 	http.HandleFunc("/v2/specialize", specializeHandlerV2())
+	fs := http.FileServer(http.Dir("/userfunc/deployarchive/test"))
+    http.Handle("/test/", http.StripPrefix("/test/", fs))
 
 	// Generic route -- all http requests go to the user function.
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
