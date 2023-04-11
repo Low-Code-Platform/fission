@@ -1,0 +1,20 @@
+
+
+
+Environment - production(nodejs)
+## Runtime image
+registry1.platform.creatingly.com/v4/system/faas-env/nodejs-run-prod:v1.1
+
+## Builder image
+fission/node-builder
+
+
+Environment - production(nodejs-ws)
+## Runtime image
+registry1.invent.sparkster.me/v4/system/faas-env/nodejs-run:v7.0
+
+## Builder image
+registry1.invent.sparkster.me/v4/system/faas-env/nodejs-build:v1.0 
+
+
+

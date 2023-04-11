@@ -18,7 +18,6 @@ var corsOptions = {
 
 app.use(cors(corsOptions));
 
-
 if (!argv.port) {
   argv.port = 8888;
 }
@@ -31,11 +30,11 @@ process.on("uncaughtException", (err) => {
 
 // User function.  Starts out undefined.
 let userFunction;
+let userTestReportPath;
 
 function loadFunction(modulepath, funcname) {
   // Read and load the code. It's placed there securely by the fission runtime.
   try {
-    console.log(`loading source for the function ${funcname}`)
     let startTime = process.hrtime();
     // support v1 codepath and v2 entrypoint like 'foo', '', 'index.hello'
     let userFunction = funcname
@@ -45,6 +44,15 @@ function loadFunction(modulepath, funcname) {
     console.log(
       `user code loaded in ${elapsed[0]}sec ${elapsed[1] / 1000000}ms`
     );
+    userTestReportPath =
+      modulepath.substring(0, modulepath.lastIndexOf("/") + 1) + "public";
+    console.log("---------------------" + userTestReportPath);
+    if (isDirectoryExist(userTestReportPath)) {
+      app.use(express.static(userTestReportPath));
+      console.log("Path exist " + userTestReportPath);
+    } else {
+      console.log("Path not exist " + userTestReportPath);
+    }
     return userFunction;
   } catch (e) {
     console.error(`user code load error: ${e}`);
