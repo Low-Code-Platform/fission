@@ -1,0 +1,28 @@
+{
+    "0": "webstudio",
+    "1": "code",
+    "2": "code",
+    "3": "dmv",
+    "4": "workflow",
+    "5": "app-ef-codegen",
+    "6": "cdn",
+    "7": "app-security",
+    "8": "dmv-be",
+    "9": "git",
+    "10": "fas",
+    "11": "fas-ws",
+    "12": "be-deployment-operator",
+    "13": "preview-generator",
+    "14": "login",
+    "env": "dev",
+    "domain": ".platform.creatingly.com",
+    "app-security": {
+        "cors": {
+            "origin": [
+                ".platform.creatingly.com$",
+                ".creatingly.com$",
+                "https://local.platform.creatingly.com:4200"
+            ]
+        }
+    }
+}

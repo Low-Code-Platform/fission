@@ -6,12 +6,14 @@ FROM node:18-alpine
 ARG NODE_ENV
 ENV NODE_ENV $NODE_ENV
 
-RUN mkdir -p /usr/src/app
+RUN mkdir -p /usr/src/app/conf
 WORKDIR /usr/src/app
 
 COPY package.json /usr/src/app/
+COPY conf /usr/src/app/conf/
 COPY .npmrc /usr/src/app/
 RUN npm install && npm cache clean --force
+RUN rm -f .npmrc
 COPY server.js /usr/src/app/server.js
 
 CMD [ "npm", "start" ]

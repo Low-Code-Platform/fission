@@ -9,7 +9,8 @@ const bodyParser = require("body-parser");
 const morgan = require("morgan");
 const argv = require("minimist")(process.argv.slice(1)); // Command line opts
 var cors = require("cors");
-
+const configJSON = require('./conf/config.json')
+const libsGlobal= require('@sys/libs-global')
 var corsOptions = {
   origin: function (origin, callback) {
     callback(null, true);
@@ -125,7 +126,7 @@ app.use(bodyParser.urlencoded({ extended: false, limit: bodyParserLimit }));
 app.use(bodyParser.json({ limit: bodyParserLimit }));
 app.use(bodyParser.raw({ limit: bodyParserLimit }));
 app.use(bodyParser.text({ type: "text/*", limit: bodyParserLimit }));
-
+app.use(libsGlobal.init(configJSON))
 app.post("/specialize", withEnsureGeneric(specialize));
 app.post("/v2/specialize", withEnsureGeneric(specializeV2));
 
@@ -176,7 +177,7 @@ app.all("/", function (req, res) {
     if (userFunction.length === 0) {
       result = Promise.resolve(userFunction());
     } else {
-      result = Promise.resolve(userFunction(context));
+      result = Promise.resolve(userFunction(context,libsGlobal));
     }
     result
       .then(function ({ status, body, headers }) {
