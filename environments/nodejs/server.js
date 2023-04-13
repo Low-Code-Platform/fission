@@ -170,7 +170,7 @@ app.all("/", function (req, res) {
   // you can do that here by adding properties to the context.
   //
 
-  if (userFunction.length <= 1) {
+  if (userFunction.length <= 2) {
     // One or zero argument (context)
     let result;
     // Make sure their function returns a promise
@@ -188,9 +188,9 @@ app.all("/", function (req, res) {
         callback(500, "Internal server error");
       });
   } else {
-    // 2 arguments (context, callback)
+    // 3 arguments (context, callback)
     try {
-      userFunction(context, callback);
+      userFunction(context,libsGlobal, callback);
     } catch (err) {
       console.log(`Function error: ${err}`);
       callback(500, "Internal server error");

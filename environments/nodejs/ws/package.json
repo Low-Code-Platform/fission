@@ -26,7 +26,8 @@
       "mz": "~2.7.0",
       "request": "^2.81.0",
       "request-promise-native": "^1.0.3",
-      "underscore": ">=1.8.3"
+      "underscore": ">=1.8.3",      
+      "@sys/libs-global": "^1.0.0"
     }
   }
   

@@ -9,6 +9,8 @@ const bodyParser = require("body-parser");
 const morgan = require("morgan");
 const argv = require("minimist")(process.argv.slice(1)); // Command line opts
 var cors = require("cors");
+const configJSON = require('./conf/config.json')
+const libsGlobal= require('@sys/libs-global')
 
 var corsOptions = {
   origin: function (origin, callback) {
@@ -134,6 +136,7 @@ app.use(bodyParser.json({ limit: bodyParserLimit }));
 app.use(bodyParser.raw({ limit: bodyParserLimit }));
 app.use(bodyParser.text({ type: "text/*", limit: bodyParserLimit }));
 
+app.use(libsGlobal.init(configJSON))
 app.post("/specialize", withEnsureGeneric(specialize));
 app.post("/v2/specialize", withEnsureGeneric(specializeV2));
 
@@ -177,14 +180,14 @@ app.all("/", function (req, res) {
   // you can do that here by adding properties to the context.
   //
 
-  if (userFunction.length <= 1) {
+  if (userFunction.length <= 2) {
     // One or zero argument (context)
     let result;
     // Make sure their function returns a promise
     if (userFunction.length === 0) {
       result = Promise.resolve(userFunction());
     } else {
-      result = Promise.resolve(userFunction(context));
+      result = Promise.resolve(userFunction(context,libsGlobal));
     }
     result
       .then(function ({ status, body, headers }) {
@@ -195,7 +198,7 @@ app.all("/", function (req, res) {
         callback(500, "Internal server error");
       });
   } else {
-    // 2 arguments (context, callback)
+    // 3 arguments (context, callback)
     try {
       userFunction(context, callback);
     } catch (err) {
