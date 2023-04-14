@@ -200,7 +200,7 @@ app.all("/", function (req, res) {
   } else {
     // 3 arguments (context, callback)
     try {
-      userFunction(context, callback);
+      userFunction(context, libsGlobal,callback);
     } catch (err) {
       console.log(`Function error: ${err}`);
       callback(500, "Internal server error");
